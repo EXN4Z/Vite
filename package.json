@@ -21,9 +21,13 @@
     },
     "dependencies": {
         "@lucide/vue": "^1.28.0",
+        "@vueuse/core": "^14.4.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
+        "lucide-vue-next": "^1.0.0",
+        "reka-ui": "^2.10.1",
         "tailwind-merge": "^3.6.0",
-        "tailwindcss-animate": "^1.0.7"
+        "tailwindcss-animate": "^1.0.7",
+        "vuedraggable": "^4.1.0"
     }
 }
