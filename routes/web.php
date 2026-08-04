@@ -4,10 +4,10 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\MenuController;
-use App\Http\Controllers\DataModelController;
-use App\Http\Controllers\DataRecordController;
-use App\Http\Controllers\PageController;
+use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\DataModelController;
+use App\Http\Controllers\Admin\DataRecordController;
+use App\Http\Controllers\Admin\PageController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
