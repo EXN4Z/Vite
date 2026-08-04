@@ -18,6 +18,7 @@ class Menu extends Model
         'type',
         'route',
         'page_id',
+        'data_model_id',
         'order',
         'is_active',
     ];
@@ -34,5 +35,10 @@ class Menu extends Model
     public function children(): HasMany
     {
         return $this->hasMany(Menu::class, 'parent_id')->orderBy('order');
+    }
+
+    public function dataModel(): BelongsTo
+    {
+        return $this->belongsTo(DataModel::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Menu;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -34,6 +35,13 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'sidebarMenus' => fn () => $request->user()
+                ? Menu::whereNull('parent_id')
+                    ->where('is_active', true)
+                    ->orderBy('order')
+                    ->with(['children' => fn ($q) => $q->where('is_active', true)])
+                    ->get()
+                : [],
         ];
     }
 }

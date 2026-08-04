@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Menu;
+use App\Models\Page;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class MenuController extends Controller
@@ -26,6 +28,8 @@ class MenuController extends Controller
 
     /**
      * Simpan menu baru.
+     * Kalau ada "blocks" (dari page builder), otomatis buat Page + PageBlock
+     * dan sambungkan menu ini ke halaman itu (type = page).
      */
     public function store(Request $request)
     {
@@ -36,6 +40,9 @@ class MenuController extends Controller
             'route' => 'nullable|string|max:255',
             'page_id' => 'nullable|exists:pages,id',
             'parent_id' => 'nullable|exists:menus,id',
+            'blocks' => 'nullable|array',
+            'blocks.*.type' => 'required_with:blocks|in:text,table,chart,card',
+            'blocks.*.config' => 'nullable|array',
         ]);
 
         // Validasi: cegah nested lebih dari 2 level.
@@ -49,9 +56,38 @@ class MenuController extends Controller
         }
 
         $maxOrder = Menu::where('parent_id', $validated['parent_id'] ?? null)->max('order');
-        $validated['order'] = ($maxOrder ?? -1) + 1;
 
-        Menu::create($validated);
+        DB::transaction(function () use ($validated, $maxOrder) {
+            $pageId = $validated['page_id'] ?? null;
+            $route = $validated['route'] ?? null;
+
+            // Kalau ada blocks dikirim, buat Page baru otomatis + simpan blok-bloknya,
+            // dan arahkan route menu ini ke halaman generic yang merender Page tersebut.
+            if (!empty($validated['blocks'])) {
+                $page = Page::create(['name' => $validated['label']]);
+
+                foreach ($validated['blocks'] as $index => $blockData) {
+                    $page->blocks()->create([
+                        'type' => $blockData['type'],
+                        'config' => $blockData['config'] ?? [],
+                        'order' => $index,
+                    ]);
+                }
+
+                $pageId = $page->id;
+                $route = route('admin.pages.show', $page->id, absolute: false);
+            }
+
+            Menu::create([
+                'label' => $validated['label'],
+                'icon' => $validated['icon'] ?? null,
+                'type' => $validated['type'],
+                'route' => $route,
+                'page_id' => $pageId,
+                'parent_id' => $validated['parent_id'] ?? null,
+                'order' => ($maxOrder ?? -1) + 1,
+            ]);
+        });
 
         return back()->with('success', 'Menu berhasil ditambahkan.');
     }

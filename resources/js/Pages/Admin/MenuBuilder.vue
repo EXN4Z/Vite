@@ -3,6 +3,8 @@ import { ref, watch } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 import draggable from 'vuedraggable';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import IconPicker from '@/Components/app/IconPicker.vue';
+import PageBuilder from '@/Components/app/PageBuilder.vue';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Trash2, GripVertical, Plus, ChevronDown, ChevronRight } from 'lucide-vue-next';
@@ -12,7 +14,16 @@ const props = defineProps({
 });
 
 // Local reactive copy biar drag-drop responsif tanpa nunggu round-trip server
-const localMenus = ref(structuredClone(props.menus));
+const localMenus = ref(JSON.parse(JSON.stringify(props.menus)));
+
+// Sync ulang localMenus setiap kali props.menus berubah dari server
+// (misal setelah router.reload() sehabis tambah/hapus menu).
+watch(
+  () => props.menus,
+  (newMenus) => {
+    localMenus.value = JSON.parse(JSON.stringify(newMenus));
+  }
+);
 
 // Track parent mana yang lagi expanded (buat lihat children-nya)
 const expanded = ref({});
@@ -28,9 +39,13 @@ const addForm = useForm({
   type: 'link',
   route: '',
   parent_id: null,
+  blocks: [],
 });
 
 function submitAdd() {
+  // Kalau ada blok yang disusun, otomatis treat sebagai menu tipe "page" (bukan link manual).
+  addForm.type = addForm.blocks.length > 0 ? 'page' : 'link';
+
   addForm.post(route('admin.menus.store'), {
     preserveScroll: true,
     onSuccess: () => {
@@ -99,13 +114,18 @@ function saveOrder() {
             <Input v-model="addForm.label" placeholder="Contoh: Laporan Penjualan" required />
           </div>
           <div>
-            <label class="mb-1 block text-xs font-medium text-slate-600">Icon (nama lucide-icon)</label>
-            <Input v-model="addForm.icon" placeholder="Contoh: FileText" />
+            <label class="mb-1 block text-xs font-medium text-slate-600">Icon</label>
+            <IconPicker v-model="addForm.icon" />
           </div>
-          <div>
+
+          <div v-if="addForm.blocks.length === 0">
             <label class="mb-1 block text-xs font-medium text-slate-600">Route / URL</label>
             <Input v-model="addForm.route" placeholder="/laporan-penjualan" />
+            <p class="mt-1 text-xs text-slate-400">
+              Atau susun halaman sendiri pakai blok di bawah, tanpa perlu isi Route.
+            </p>
           </div>
+
           <div>
             <label class="mb-1 block text-xs font-medium text-slate-600">Induk Menu (opsional)</label>
             <select
@@ -118,8 +138,15 @@ function saveOrder() {
               </option>
             </select>
           </div>
+
+          <!-- Page Builder: drag blok buat susun halaman custom -->
+          <div>
+            <label class="mb-1 block text-xs font-medium text-slate-600">Susun Halaman (opsional)</label>
+            <PageBuilder v-model="addForm.blocks" />
+          </div>
+
           <div class="flex gap-2">
-            <Button type="submit" size="sm" :disabled="addForm.processing">Simpan</Button>
+            <Button type="button" size="sm" :disabled="addForm.processing" @click="submitAdd">Simpan</Button>
             <Button type="button" variant="ghost" size="sm" @click="showAddForm = false">Batal</Button>
           </div>
         </form>

@@ -1,30 +1,15 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
 </script>
 
 <template>
-    <Head title="Dashboard" />
+  <AppLayout>
+    <template #header>
+      <h1 class="text-lg font-semibold text-slate-900">Dashboard</h1>
+    </template>
 
-    <AuthenticatedLayout>
-        <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
-                Dashboard
-            </h2>
-        </template>
-
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
-                >
-                    <div class="p-6 text-gray-900">
-                        You're logged in!
-                    </div>
-                </div>
-            </div>
-        </div>
-    </AuthenticatedLayout>
+    <div class="flex h-full items-center justify-center rounded-lg border border-dashed border-slate-300">
+      <p class="text-sm text-slate-400">Konten dashboard akan diisi di sini</p>
+    </div>
+  </AppLayout>
 </template>
